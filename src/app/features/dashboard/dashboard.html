@@ -79,6 +79,39 @@
     </div>
   }
 
+  <!-- Today's Tasks -->
+  @if (todaysTasks$ | async; as tasks) {
+    @if (tasks.length > 0) {
+      <div class="animate-fade-in mt-6">
+        <h3 class="text-lg font-bold text-gray-800 mb-3">Tareas de Hoy</h3>
+        <div class="space-y-3">
+          @for (task of tasks; track task.id) {
+            <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between"
+                 [class.opacity-75]="isTaskCompletedToday(task)">
+              <div class="flex items-center space-x-3">
+                <input 
+                  type="checkbox" 
+                  [checked]="isTaskCompletedToday(task)" 
+                  (change)="toggleTask(task)"
+                  class="h-5 w-5 text-blue-600 rounded focus:ring-blue-500 border-gray-300">
+                
+                <span class="font-medium text-gray-800" [class.line-through]="isTaskCompletedToday(task)" [class.text-gray-400]="isTaskCompletedToday(task)">
+                  {{ task.title }}
+                </span>
+              </div>
+              <span class="text-xs px-2 py-1 bg-blue-100 text-blue-600 rounded-full font-medium">
+                @if (task.type === 'daily' && task.isRecurring) { Diario }
+                @else if (task.type === 'monthly') { Mensual }
+                @else if (task.type === 'annual') { Anual }
+                @else { Hoy }
+              </span>
+            </div>
+          }
+        </div>
+      </div>
+    }
+  }
+
   <!-- Next Routine Item -->
   @if (nextRoutineItem$ | async; as nextItem) {
     <div class="bg-white p-4 rounded-xl shadow border-l-4 border-yellow-400">

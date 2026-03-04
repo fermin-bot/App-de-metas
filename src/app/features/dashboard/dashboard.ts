@@ -4,7 +4,7 @@ import { RouterLink } from '@angular/router';
 import { DataService } from '../../core/services/data';
 import { map } from 'rxjs/operators';
 import { combineLatest } from 'rxjs';
-import { Goal } from '../../core/models/models';
+import { Goal, Task } from '../../core/models/models';
 
 @Component({
   selector: 'app-dashboard',
@@ -22,15 +22,76 @@ export class Dashboard {
 
   // Tasks statistics
   dailyTasks$ = this.dataService.getTasks().pipe(
-    map(tasks => tasks.filter(t => t.type === 'daily' && t.date === this.todayStr))
+    map(tasks => tasks.filter(t => t.type === 'daily' && t.recurrenceDate === this.todayStr))
   );
 
-  pendingTasksCount$ = this.dailyTasks$.pipe(
-    map(tasks => tasks.filter(t => !t.completed).length)
+  // New: All Tasks for Today (One-off + Recurring)
+  todaysTasks$ = this.dataService.getTasks().pipe(
+    map(tasks => tasks.filter(t => {
+      // 1. One-off Daily Tasks for today
+      if (t.type === 'daily' && !t.isRecurring) {
+        return t.recurrenceDate === this.todayStr; // Only show if date matches exactly
+      }
+
+      // 2. Recurring Tasks
+      if (t.isRecurring) {
+        const today = new Date();
+        const d = today.getDate();
+        const m = today.getMonth(); // 0-11
+        const y = today.getFullYear();
+        const dayOfWeek = today.getDay(); // 0=Sun
+
+        // Check if completed today (to hide or show as checked?)
+        // User probably wants to see them to check them off.
+        
+        if (t.type === 'daily') return true;
+
+        if (t.type === 'monthly') {
+          if (t.recurrenceMonthType === 'date') {
+            return d === t.recurrenceMonthDay;
+          } else if (t.recurrenceMonthType === 'weekday') {
+            if (dayOfWeek !== t.recurrenceDayOfWeek) return false;
+            
+            const weekIdx = Math.ceil(d / 7);
+            
+            // Handle "Last" (5)
+            if (t.recurrenceWeekIndex === 5) {
+               const nextWeek = new Date(y, m, d + 7);
+               return nextWeek.getMonth() !== m;
+            }
+            
+            return weekIdx === t.recurrenceWeekIndex;
+          }
+        }
+
+        if (t.type === 'annual') {
+           // Check against recurrenceDate (if set for annual date)
+           // Or use the new fields if I decide to use them.
+           // Let's support both for robustness or just the new fields.
+           // I added recurrenceAnnualMonth/Day to models.ts
+           if (t.recurrenceAnnualMonth !== undefined && t.recurrenceAnnualDay !== undefined) {
+             return m === t.recurrenceAnnualMonth && d === t.recurrenceAnnualDay;
+           }
+           // Fallback to recurrenceDate string parsing if needed
+           if (t.recurrenceDate) {
+             const parts = t.recurrenceDate.split('-');
+             if (parts.length === 3) {
+               return m === (parseInt(parts[1]) - 1) && d === parseInt(parts[2]);
+             }
+           }
+        }
+      }
+      
+      return false;
+    }))
   );
 
-  completedTasksCount$ = this.dailyTasks$.pipe(
-    map(tasks => tasks.filter(t => t.completed).length)
+  pendingTasksCount$ = this.todaysTasks$.pipe(
+    map(tasks => tasks.filter(t => !this.isTaskCompletedToday(t)).length)
+  );
+
+  completedTasksCount$ = this.todaysTasks$.pipe(
+    map(tasks => tasks.filter(t => this.isTaskCompletedToday(t)).length)
   );
 
   // Routine status
@@ -92,7 +153,7 @@ export class Dashboard {
            if (g.recurrenceDays && g.recurrenceDays.length > 0) {
              return g.recurrenceDays.includes(this.currentDayIndex);
            }
-           return true; // If no specific days, maybe just once a week? Or every day of that week? Assuming every day if no days selected is risky.
+           return true; 
         }
 
         if (g.recurrenceType === 'monthly') {
@@ -130,5 +191,25 @@ export class Dashboard {
 
   toggleHabit(goal: Goal) {
     this.dataService.toggleGoalCompletion(goal.id, this.todayStr);
+  }
+
+  // Task Helpers
+  isTaskCompletedToday(task: Task): boolean {
+    if (task.isRecurring) {
+      return !!(task.history && task.history[this.todayStr]);
+    }
+    return task.completed;
+  }
+
+  toggleTask(task: Task) {
+    if (task.isRecurring) {
+      this.dataService.toggleTaskCompletion(task.id, this.todayStr);
+    } else {
+      // Toggle normal task
+      // Need a method in DataService for this? 
+      // Existing toggleTaskCompletion handles isRecurring check inside? 
+      // Let's check data.ts
+      this.dataService.toggleTaskCompletion(task.id, this.todayStr);
+    }
   }
 }

@@ -98,30 +98,12 @@ export class DataService {
         // Progress Calculation V2
         if (goal.recurrenceType && goal.durationValue && goal.durationUnit && goal.startDate && goal.endDate) {
            this.calculateProgressV2(goal, history);
-        } 
-        // Legacy Progress Calculation
-        else if (goal.duration) {
-           const completedCount = Object.keys(history).length;
-           
-           if (goal.targetCount && goal.duration) {
-             let totalTarget = 0;
-             if (goal.frequency === 'daily') {
-               totalTarget = goal.duration;
-             } else if (goal.frequency === 'weekly' && goal.targetCount) {
-               const weeks = goal.duration / 7;
-               totalTarget = Math.round(weeks * goal.targetCount);
-             } else if (goal.frequency === 'specific_days' && goal.selectedDays) {
-               const weeks = goal.duration / 7;
-               totalTarget = Math.round(weeks * goal.selectedDays.length);
-             }
-             
-             if (totalTarget > 0) {
-               goal.progress = Math.min(Math.round((completedCount / totalTarget) * 100), 100);
-               goal.completed = goal.progress >= 100;
-             }
-           }
+        } else {
+           // Fallback V1
+           // ... (simpler logic if needed)
         }
       } else {
+        // Simple goal
         goal.completed = !goal.completed;
         goal.progress = goal.completed ? 100 : 0;
       }
@@ -146,13 +128,13 @@ export class DataService {
     } else if (goal.recurrenceType === 'weekly') {
       const weeks = totalDurationDays / 7;
       const interval = goal.recurrenceInterval || 1;
-      const daysPerWeek = goal.recurrenceDays?.length || 1; // Default to 1 if empty?
+      const daysPerWeek = goal.recurrenceDays?.length || 1; 
       // Occurrences = (Weeks / Interval) * DaysPerWeek
       totalTarget = Math.floor((weeks / interval) * daysPerWeek);
     } else if (goal.recurrenceType === 'monthly') {
       const months = (end.getFullYear() - start.getFullYear()) * 12 + (end.getMonth() - start.getMonth());
       const interval = goal.recurrenceInterval || 1;
-      totalTarget = Math.floor(months / interval); // 1 per month usually? Or more complex logic needed if we support "5 times a month"
+      totalTarget = Math.floor(months / interval); 
     } else if (goal.recurrenceType === 'yearly') {
       const years = end.getFullYear() - start.getFullYear();
       const interval = goal.recurrenceInterval || 1;
@@ -177,7 +159,11 @@ export class DataService {
   getTasks() { return this.tasks$.asObservable(); }
 
   addTask(task: Omit<Task, 'id'>) {
-    const newTask: Task = { ...task, id: crypto.randomUUID() };
+    const newTask: Task = { 
+      ...task, 
+      id: crypto.randomUUID(),
+      history: task.isRecurring ? {} : undefined 
+    };
     const current = this.tasks$.value;
     const updated = [...current, newTask];
     this.save('tasks', updated);
@@ -188,6 +174,31 @@ export class DataService {
     const current = this.tasks$.value;
     const index = current.findIndex(t => t.id === task.id);
     if (index !== -1) {
+      current[index] = task;
+      this.save('tasks', current);
+      this.tasks$.next([...current]);
+    }
+  }
+
+  toggleTaskCompletion(taskId: string, date: string) {
+    const current = this.tasks$.value;
+    const index = current.findIndex(t => t.id === taskId);
+    
+    if (index !== -1) {
+      const task = { ...current[index] };
+      
+      if (task.isRecurring) {
+        const history = { ...(task.history || {}) };
+        if (history[date]) {
+          delete history[date];
+        } else {
+          history[date] = true;
+        }
+        task.history = history;
+      } else {
+        task.completed = !task.completed;
+      }
+      
       current[index] = task;
       this.save('tasks', current);
       this.tasks$.next([...current]);

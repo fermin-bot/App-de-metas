@@ -33,9 +33,27 @@ export interface Task {
   title: string;
   completed: boolean;
   type: 'daily' | 'monthly' | 'annual';
-  date?: string; // ISO date string for daily
-  month?: number; // 0-11 for monthly
-  year?: number; // YYYY for annual
+  
+  // New Recurrence Logic for Tasks
+  isRecurring: boolean;
+  
+  // Advanced Recurrence Config
+  recurrenceType?: 'daily' | 'weekly' | 'monthly' | 'yearly';
+  
+  // Monthly/Yearly Specifics
+  // "First Saturday of Month" -> monthType='weekday', monthWeek=1, monthWeekday=6
+  // "15th of Month" -> monthType='date', monthDay=15
+  recurrenceMonthType?: 'date' | 'weekday'; 
+  recurrenceMonthDay?: number; // 1-31
+  recurrenceWeekIndex?: number; // 1=First, 2=Second, 3=Third, 4=Fourth, 5=Last
+  recurrenceDayOfWeek?: number; // 0=Sunday, 1=Monday...
+
+  recurrenceAnnualMonth?: number; // 0-11
+  recurrenceAnnualDay?: number; // 1-31
+
+  recurrenceDate?: string; // Specific date for annual or one-off
+  
+  history?: Record<string, boolean>; // YYYY-MM-DD: true (for recurring)
   createdAt: string;
 }
 

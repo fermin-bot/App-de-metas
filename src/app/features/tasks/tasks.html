@@ -46,34 +46,84 @@
         }
 
         @if ((selectedType$ | async) === 'monthly') {
-          <div class="flex space-x-2">
-            <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700">Mes</label>
-              <select formControlName="month" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                @for (month of months; track $index) {
-                  <option [value]="$index">{{month}}</option>
-                }
-              </select>
+          <div class="space-y-3 bg-gray-50 p-3 rounded-md">
+            <!-- Toggle Mode -->
+            <div class="flex space-x-2 mb-2">
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" formControlName="recurrenceMonthType" value="date" class="text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Por fecha (ej. el 15)</span>
+              </label>
+              <label class="flex items-center space-x-2 cursor-pointer">
+                <input type="radio" formControlName="recurrenceMonthType" value="weekday" class="text-blue-600 focus:ring-blue-500">
+                <span class="text-sm text-gray-700">Por día (ej. 1er Sábado)</span>
+              </label>
             </div>
-            <div class="flex-1">
-              <label class="block text-sm font-medium text-gray-700">Año</label>
-              <select formControlName="year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-                @for (year of years; track year) {
-                  <option [value]="year">{{year}}</option>
-                }
-              </select>
-            </div>
+
+            @if (taskForm.get('recurrenceMonthType')?.value === 'date') {
+              <div>
+                <label class="block text-sm font-medium text-gray-700">Día del mes</label>
+                <select formControlName="recurrenceMonthDay" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                  @for (day of [].constructor(31); track $index) {
+                    <option [value]="$index + 1">{{$index + 1}}</option>
+                  }
+                </select>
+              </div>
+            } @else {
+              <div class="flex space-x-2">
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700">Semana</label>
+                  <select formControlName="recurrenceWeekIndex" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    <option [value]="1">Primer</option>
+                    <option [value]="2">Segundo</option>
+                    <option [value]="3">Tercer</option>
+                    <option [value]="4">Cuarto</option>
+                    <option [value]="5">Último</option>
+                  </select>
+                </div>
+                <div class="flex-1">
+                  <label class="block text-sm font-medium text-gray-700">Día</label>
+                  <select formControlName="recurrenceDayOfWeek" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                    <option [value]="1">Lunes</option>
+                    <option [value]="2">Martes</option>
+                    <option [value]="3">Miércoles</option>
+                    <option [value]="4">Jueves</option>
+                    <option [value]="5">Viernes</option>
+                    <option [value]="6">Sábado</option>
+                    <option [value]="0">Domingo</option>
+                  </select>
+                </div>
+              </div>
+            }
           </div>
         }
 
         @if ((selectedType$ | async) === 'annual') {
-          <div>
-            <label class="block text-sm font-medium text-gray-700">Año</label>
-            <select formControlName="year" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
-              @for (year of years; track year) {
-                <option [value]="year">{{year}}</option>
-              }
-            </select>
+          <div class="flex space-x-2">
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Mes</label>
+              <select formControlName="recurrenceAnnualMonth" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                <option [value]="0">Enero</option>
+                <option [value]="1">Febrero</option>
+                <option [value]="2">Marzo</option>
+                <option [value]="3">Abril</option>
+                <option [value]="4">Mayo</option>
+                <option [value]="5">Junio</option>
+                <option [value]="6">Julio</option>
+                <option [value]="7">Agosto</option>
+                <option [value]="8">Septiembre</option>
+                <option [value]="9">Octubre</option>
+                <option [value]="10">Noviembre</option>
+                <option [value]="11">Diciembre</option>
+              </select>
+            </div>
+            <div class="flex-1">
+              <label class="block text-sm font-medium text-gray-700">Día</label>
+              <select formControlName="recurrenceAnnualDay" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 border p-2">
+                @for (day of [].constructor(31); track $index) {
+                  <option [value]="$index + 1">{{$index + 1}}</option>
+                }
+              </select>
+            </div>
           </div>
         }
 
