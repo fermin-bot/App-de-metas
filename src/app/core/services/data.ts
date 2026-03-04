@@ -227,6 +227,16 @@ export class DataService {
     this.ideas$.next(updated);
   }
 
+  updateIdea(idea: Idea) {
+    const current = this.ideas$.value;
+    const index = current.findIndex(i => i.id === idea.id);
+    if (index !== -1) {
+      current[index] = idea;
+      this.save('ideas', current);
+      this.ideas$.next([...current]);
+    }
+  }
+
   deleteIdea(id: string) {
     const current = this.ideas$.value;
     const updated = current.filter(i => i.id !== id);

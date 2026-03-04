@@ -61,6 +61,8 @@ export interface Idea {
   id: string;
   content: string;
   createdAt: string;
+  targetDate?: string; // YYYY-MM-DD
+  status: 'apunte' | 'en_proceso' | 'desarrollada';
 }
 
 export interface RoutineItem {

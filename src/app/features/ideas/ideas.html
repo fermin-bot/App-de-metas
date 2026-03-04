@@ -1,28 +1,122 @@
 <div class="p-4 space-y-4">
-  <h1 class="text-2xl font-bold text-gray-800">Banco de Ideas</h1>
-
-  <div class="bg-white p-4 rounded-lg shadow-md">
-    <form [formGroup]="ideaForm" (ngSubmit)="addIdea()" class="flex flex-col space-y-2">
-      <textarea 
-        formControlName="content" 
-        placeholder="¿Qué tienes en mente?" 
-        rows="3"
-        class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2"></textarea>
-      <div class="flex justify-end">
-        <button type="submit" [disabled]="ideaForm.invalid" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50 font-medium">
-          Guardar Idea
-        </button>
-      </div>
-    </form>
+  <div class="flex justify-between items-center">
+    <h1 class="text-2xl font-bold text-gray-800">Banco de Ideas</h1>
+    <button (click)="toggleForm()" class="bg-yellow-500 text-white p-2 rounded-full shadow-lg hover:bg-yellow-600 transition">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+      </svg>
+    </button>
   </div>
+
+  <!-- Filters -->
+  <div class="bg-white p-3 rounded-lg shadow-sm space-y-2">
+    <div class="relative">
+      <input 
+        type="text" 
+        (input)="setSearchTerm($any($event.target).value)" 
+        placeholder="Buscar idea..." 
+        class="w-full pl-9 pr-3 py-2 rounded-md border border-gray-300 focus:outline-none focus:ring-1 focus:ring-yellow-500 focus:border-yellow-500 text-sm">
+      <div class="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+        <svg class="h-4 w-4 text-gray-400" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+        </svg>
+      </div>
+    </div>
+    
+    <div class="flex space-x-2">
+      <select 
+        (change)="setStatusFilter($any($event.target).value)" 
+        class="flex-1 rounded-md border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 py-2 border px-2">
+        <option value="all">Todos los estados</option>
+        <option value="apunte">Solo apuntes</option>
+        <option value="en_proceso">Seguir pensando</option>
+        <option value="desarrollada">Desarrolladas</option>
+      </select>
+      
+      <input 
+        type="date" 
+        (change)="setDateFilter($any($event.target).value)" 
+        class="flex-1 rounded-md border-gray-300 text-sm focus:ring-yellow-500 focus:border-yellow-500 py-2 border px-2">
+    </div>
+  </div>
+
+  @if (showForm) {
+    <div class="bg-white p-4 rounded-lg shadow-md animate-fade-in">
+      <h2 class="text-lg font-semibold mb-3">Nueva Idea</h2>
+      <form [formGroup]="ideaForm" (ngSubmit)="addIdea()" class="flex flex-col space-y-3">
+        <textarea 
+          formControlName="content" 
+          placeholder="¿Qué tienes en mente?" 
+          rows="3"
+          class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2"></textarea>
+        
+        <div class="flex space-x-3">
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Fecha (opcional)</label>
+            <input type="date" formControlName="targetDate" class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-sm">
+          </div>
+          <div class="flex-1">
+            <label class="block text-xs font-medium text-gray-700 mb-1">Estado</label>
+            <select formControlName="status" class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2 text-sm">
+              <option value="apunte">Apunte</option>
+              <option value="en_proceso">Seguir pensando</option>
+              <option value="desarrollada">Desarrollada</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="flex justify-end space-x-2 pt-2">
+          <button type="button" (click)="toggleForm()" class="px-4 py-2 bg-gray-200 text-gray-800 rounded-md hover:bg-gray-300">Cancelar</button>
+          <button type="submit" [disabled]="ideaForm.invalid" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50 font-medium">
+            Guardar
+          </button>
+        </div>
+      </form>
+    </div>
+  }
 
   <div class="grid grid-cols-1 gap-4">
     @for (idea of ideas$ | async; track idea.id) {
-      <div class="bg-yellow-50 p-4 rounded-lg shadow border border-yellow-200 relative group">
-        <p class="text-gray-800 whitespace-pre-wrap">{{ idea.content }}</p>
-        <div class="mt-2 text-xs text-gray-500 flex justify-between items-center">
-          <span>{{ idea.createdAt | date:'short' }}</span>
-          <button (click)="deleteIdea(idea.id)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+      <div class="bg-yellow-50 p-4 rounded-lg shadow border border-yellow-200 relative group transition-all hover:shadow-md">
+        <!-- Status Badge -->
+        <div class="absolute top-2 right-2">
+           <select 
+             [value]="idea.status || 'apunte'" 
+             (change)="updateStatus(idea, $any($event.target).value)"
+             class="text-xs rounded-full px-2 py-1 border-0 cursor-pointer focus:ring-0 font-medium appearance-none"
+             [ngClass]="{
+               'bg-gray-200 text-gray-700': !idea.status || idea.status === 'apunte',
+               'bg-blue-100 text-blue-700': idea.status === 'en_proceso',
+               'bg-green-100 text-green-700': idea.status === 'desarrollada'
+             }">
+             <option value="apunte">Apunte</option>
+             <option value="en_proceso">Pensando...</option>
+             <option value="desarrollada">Desarrollada</option>
+           </select>
+        </div>
+
+        <p class="text-gray-800 whitespace-pre-wrap mt-6 mb-2">{{ idea.content }}</p>
+        
+        <div class="mt-3 pt-3 border-t border-yellow-100 flex flex-wrap justify-between items-center gap-2">
+          <div class="flex items-center space-x-3 text-xs text-gray-500">
+            <span class="flex items-center" title="Creado el">
+              <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+              </svg>
+              {{ idea.createdAt | date:'dd/MM' }}
+            </span>
+            
+            @if (idea.targetDate) {
+              <span class="flex items-center text-yellow-700 bg-yellow-100 px-2 py-0.5 rounded-full">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-3 w-3 mr-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                </svg>
+                {{ idea.targetDate | date:'dd/MM/yyyy' }}
+              </span>
+            }
+          </div>
+
+          <button (click)="deleteIdea(idea.id)" class="text-gray-400 hover:text-red-500 transition-colors" title="Eliminar">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
               <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
             </svg>
