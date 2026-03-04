@@ -1,0 +1,41 @@
+<div class="p-4 space-y-4">
+  <h1 class="text-2xl font-bold text-gray-800">Banco de Ideas</h1>
+
+  <div class="bg-white p-4 rounded-lg shadow-md">
+    <form [formGroup]="ideaForm" (ngSubmit)="addIdea()" class="flex flex-col space-y-2">
+      <textarea 
+        formControlName="content" 
+        placeholder="¿Qué tienes en mente?" 
+        rows="3"
+        class="w-full rounded-md border-gray-300 shadow-sm focus:border-yellow-500 focus:ring-yellow-500 border p-2"></textarea>
+      <div class="flex justify-end">
+        <button type="submit" [disabled]="ideaForm.invalid" class="px-4 py-2 bg-yellow-500 text-white rounded-md hover:bg-yellow-600 disabled:opacity-50 font-medium">
+          Guardar Idea
+        </button>
+      </div>
+    </form>
+  </div>
+
+  <div class="grid grid-cols-1 gap-4">
+    @for (idea of ideas$ | async; track idea.id) {
+      <div class="bg-yellow-50 p-4 rounded-lg shadow border border-yellow-200 relative group">
+        <p class="text-gray-800 whitespace-pre-wrap">{{ idea.content }}</p>
+        <div class="mt-2 text-xs text-gray-500 flex justify-between items-center">
+          <span>{{ idea.createdAt | date:'short' }}</span>
+          <button (click)="deleteIdea(idea.id)" class="text-gray-400 hover:text-red-500 opacity-0 group-hover:opacity-100 transition-opacity">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16" />
+            </svg>
+          </button>
+        </div>
+      </div>
+    } @empty {
+      <div class="text-center py-10 text-gray-500">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-16 w-16 mx-auto mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9.663 17h4.673M12 3v1m6.364 1.636l-.707.707M21 12h-1M4 12H3m3.343-5.657l-.707-.707m2.828 9.9a5 5 0 117.072 0l-.548.547A3.374 3.374 0 0014 18.469V19a2 2 0 11-4 0v-.531c0-.895-.356-1.754-.988-2.386l-.548-.547z" />
+        </svg>
+        <p>Captura tus ideas aquí antes de que se escapen.</p>
+      </div>
+    }
+  </div>
+</div>

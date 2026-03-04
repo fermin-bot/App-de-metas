@@ -1,0 +1,126 @@
+<div class="p-4 space-y-6">
+  <!-- Header -->
+  <div class="flex justify-between items-end">
+    <div>
+      <h2 class="text-sm text-gray-500 font-medium uppercase tracking-wider">{{ today | date:'EEEE, d MMMM' }}</h2>
+      <h1 class="text-3xl font-bold text-gray-800">Hola, Campeón</h1>
+    </div>
+    <div class="h-10 w-10 bg-blue-100 rounded-full flex items-center justify-center text-blue-600">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14.828 14.828a4 4 0 01-5.656 0M9 10h.01M15 10h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+      </svg>
+    </div>
+  </div>
+
+  <!-- Summary Cards -->
+  <div class="grid grid-cols-2 gap-4">
+    <div class="bg-blue-500 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+      <div class="absolute right-0 top-0 opacity-10 transform translate-x-2 -translate-y-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm1-12a1 1 0 10-2 0v4a1 1 0 00.293.707l2.828 2.829a1 1 0 101.415-1.415L11 9.586V6z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <p class="text-blue-100 text-sm font-medium">Tareas Pendientes</p>
+      <p class="text-4xl font-bold mt-1">{{ pendingTasksCount$ | async }}</p>
+      <a routerLink="/tasks" class="text-xs text-blue-100 mt-2 inline-block hover:underline">Ver todas &rarr;</a>
+    </div>
+
+    <div class="bg-purple-500 text-white p-4 rounded-xl shadow-lg relative overflow-hidden">
+      <div class="absolute right-0 top-0 opacity-10 transform translate-x-2 -translate-y-2">
+        <svg xmlns="http://www.w3.org/2000/svg" class="h-24 w-24" fill="currentColor" viewBox="0 0 20 20">
+          <path fill-rule="evenodd" d="M6.267 3.455a3.066 3.066 0 001.745-.723 3.066 3.066 0 013.976 0 3.066 3.066 0 001.745.723 3.066 3.066 0 012.812 2.812c.051.643.304 1.254.723 1.745a3.066 3.066 0 010 3.976 3.066 3.066 0 00-.723 1.745 3.066 3.066 0 01-2.812 2.812 3.066 3.066 0 00-1.745.723 3.066 3.066 0 01-3.976 0 3.066 3.066 0 00-1.745-.723 3.066 3.066 0 01-2.812-2.812 3.066 3.066 0 00-.723-1.745 3.066 3.066 0 010-3.976 3.066 3.066 0 00.723-1.745 3.066 3.066 0 012.812-2.812zm7.44 5.252a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clip-rule="evenodd" />
+        </svg>
+      </div>
+      <p class="text-purple-100 text-sm font-medium">Rutina</p>
+      <p class="text-4xl font-bold mt-1">{{ routineProgress$ | async }}%</p>
+      <p class="text-xs text-purple-100 mt-2">Completado</p>
+    </div>
+  </div>
+
+  <!-- Today's Habits -->
+  @if (hasRecurringGoals$ | async) {
+    <div class="animate-fade-in">
+      <h3 class="text-lg font-bold text-gray-800 mb-3">Hábitos de Hoy</h3>
+      
+      @if (todaysHabits$ | async; as habits) {
+        @if (habits.length > 0) {
+          <div class="space-y-3">
+            @for (habit of habits; track habit.id) {
+              <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100 flex items-center justify-between"
+                   [class.opacity-75]="isHabitCompletedToday(habit)">
+                <div class="flex items-center space-x-3">
+                  <button (click)="toggleHabit(habit)" 
+                          class="h-6 w-6 rounded-full border-2 flex items-center justify-center transition-colors"
+                          [ngClass]="isHabitCompletedToday(habit) ? 'bg-green-500 border-green-500 text-white' : 'border-gray-300 text-transparent hover:border-green-500'">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="3" d="M5 13l4 4L19 7" />
+                    </svg>
+                  </button>
+                  <div>
+                    <p class="font-medium text-gray-800" [class.line-through]="isHabitCompletedToday(habit)">{{ habit.title }}</p>
+                    <p class="text-xs text-gray-500">Progreso total: {{ habit.progress }}%</p>
+                  </div>
+                </div>
+                <span class="text-xs px-2 py-1 bg-purple-100 text-purple-600 rounded-full font-medium">
+                  @if (habit.frequency === 'daily') { Diario }
+                  @else if (habit.frequency === 'weekly') { Semanal }
+                  @else { Hoy }
+                </span>
+              </div>
+            }
+          </div>
+        } @else {
+          <div class="bg-gray-50 p-4 rounded-lg text-center border border-gray-200 border-dashed">
+            <p class="text-gray-600 font-medium">¡Hoy no tienes hábitos programados!</p>
+            <p class="text-xs text-gray-500 mt-1">Tus hábitos están programados para otros días.</p>
+          </div>
+        }
+      }
+    </div>
+  }
+
+  <!-- Next Routine Item -->
+  @if (nextRoutineItem$ | async; as nextItem) {
+    <div class="bg-white p-4 rounded-xl shadow border-l-4 border-yellow-400">
+      <h3 class="text-sm font-semibold text-gray-500 uppercase">Siguiente en tu rutina</h3>
+      <div class="mt-2 flex items-center justify-between">
+        <div>
+          <p class="text-lg font-bold text-gray-800">{{ nextItem.activity }}</p>
+          <p class="text-gray-500">{{ nextItem.time }}</p>
+        </div>
+        <a routerLink="/routine" class="bg-yellow-100 text-yellow-700 p-2 rounded-full hover:bg-yellow-200 transition">
+          <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5l7 7-7 7" />
+          </svg>
+        </a>
+      </div>
+    </div>
+  }
+
+  <!-- Active Goals Preview -->
+  <div>
+    <div class="flex justify-between items-center mb-3">
+      <h3 class="text-lg font-bold text-gray-800">Metas en Foco</h3>
+      <a routerLink="/goals" class="text-sm text-blue-600 font-medium">Ver todas</a>
+    </div>
+    
+    <div class="space-y-3">
+      @for (goal of activeGoals$ | async; track goal.id) {
+        <div class="bg-white p-3 rounded-lg shadow-sm border border-gray-100">
+          <div class="flex justify-between items-center mb-2">
+            <span class="font-medium text-gray-800">{{ goal.title }}</span>
+            <span class="text-xs px-2 py-1 bg-gray-100 rounded text-gray-600">{{ goal.category }}</span>
+          </div>
+          <div class="w-full bg-gray-200 rounded-full h-1.5">
+            <div class="bg-green-500 h-1.5 rounded-full" [style.width.%]="goal.progress"></div>
+          </div>
+        </div>
+      } @empty {
+        <div class="text-center py-4 bg-gray-50 rounded-lg border border-dashed border-gray-300">
+          <p class="text-gray-500 text-sm">No hay metas activas.</p>
+          <a routerLink="/goals" class="text-blue-600 text-sm font-medium mt-1 inline-block">Crear una meta</a>
+        </div>
+      }
+    </div>
+  </div>
+</div>
