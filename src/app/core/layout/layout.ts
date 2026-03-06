@@ -16,5 +16,6 @@ export class Layout {
     { label: 'Tareas', path: '/tasks', icon: 'list' },
     { label: 'Ideas', path: '/ideas', icon: 'bulb' },
     { label: 'Rutina', path: '/routine', icon: 'clock' },
+    { label: 'Perfil', path: '/profile', icon: 'user' },
   ];
 }

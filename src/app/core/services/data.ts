@@ -2,6 +2,7 @@ import { Injectable, inject, PLATFORM_ID } from '@angular/core';
 import { isPlatformBrowser } from '@angular/common';
 import { BehaviorSubject } from 'rxjs';
 import { Goal, Task, Idea, RoutineItem } from '../models/models';
+import { AuthService } from './auth.service';
 
 @Injectable({
   providedIn: 'root'
@@ -9,11 +10,35 @@ import { Goal, Task, Idea, RoutineItem } from '../models/models';
 export class DataService {
   private platformId = inject(PLATFORM_ID);
   private isBrowser = isPlatformBrowser(this.platformId);
+  private authService = inject(AuthService);
 
-  private goals$ = new BehaviorSubject<Goal[]>(this.load('goals') || []);
-  private tasks$ = new BehaviorSubject<Task[]>(this.load('tasks') || []);
-  private ideas$ = new BehaviorSubject<Idea[]>(this.load('ideas') || []);
-  private routine$ = new BehaviorSubject<RoutineItem[]>(this.load('routine') || []);
+  private goals$ = new BehaviorSubject<Goal[]>([]);
+  private tasks$ = new BehaviorSubject<Task[]>([]);
+  private ideas$ = new BehaviorSubject<Idea[]>([]);
+  private routine$ = new BehaviorSubject<RoutineItem[]>([]);
+
+  constructor() {
+    // Reload data when user changes
+    this.authService.currentUser.subscribe(user => {
+      this.loadAllData(user?.id);
+    });
+  }
+
+  private loadAllData(userId?: string) {
+    if (!userId) {
+      // Clear data if no user
+      this.goals$.next([]);
+      this.tasks$.next([]);
+      this.ideas$.next([]);
+      this.routine$.next([]);
+      return;
+    }
+
+    this.goals$.next(this.load(`goals_${userId}`) || []);
+    this.tasks$.next(this.load(`tasks_${userId}`) || []);
+    this.ideas$.next(this.load(`ideas_${userId}`) || []);
+    this.routine$.next(this.load(`routine_${userId}`) || []);
+  }
 
   private load(key: string): any {
     if (this.isBrowser) {
@@ -25,7 +50,10 @@ export class DataService {
 
   private save(key: string, data: any) {
     if (this.isBrowser) {
-      localStorage.setItem(key, JSON.stringify(data));
+      const userId = this.authService.currentUserValue?.id;
+      if (userId) {
+        localStorage.setItem(`${key}_${userId}`, JSON.stringify(data));
+      }
     }
   }
 

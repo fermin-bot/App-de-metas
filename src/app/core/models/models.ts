@@ -65,6 +65,18 @@ export interface Idea {
   status: 'apunte' | 'en_proceso' | 'desarrollada';
 }
 
+export interface User {
+  id: string;
+  username: string;
+  email: string;
+  password?: string; // In a real app, this would be hashed or not stored locally like this
+  createdAt: string;
+  settings?: {
+    theme?: 'light' | 'dark';
+    notifications?: boolean;
+  };
+}
+
 export interface RoutineItem {
   id: string;
   time: string; // HH:mm
